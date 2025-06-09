@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api'; // MUDANÇA 1: Importamos nosso serviço 'api'
+import api from '../services/api'; 
 import { useNavigate } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 
@@ -14,12 +14,10 @@ const DashboardPage = () => {
 
     const fetchTransactions = async () => {
         try {
-            // MUDANÇA 2: Usamos 'api.get' e removemos o header. Fica mais limpo!
             const res = await api.get('/api/transactions');
             setTransactions(res.data);
         } catch (error) {
             console.error('Erro ao buscar transações', error);
-            // Adicional: se o token for inválido, deslogar o usuário
             if (error.response && error.response.status === 401) {
                 handleLogout();
             }
@@ -33,7 +31,7 @@ const DashboardPage = () => {
         } else {
             navigate('/login');
         }
-    // Adicionamos 'navigate' como dependência para boas práticas
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, navigate]); 
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,7 +39,6 @@ const DashboardPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // MUDANÇA 3: Usamos 'api.post' e removemos o header
             await api.post('/api/transactions', formData);
             fetchTransactions();
             setFormData({ description: '', amount: '', type: 'expense' });
@@ -52,7 +49,6 @@ const DashboardPage = () => {
     
     const handleDelete = async (id) => {
         try {
-            // MUDANÇA 4: Usamos 'api.delete' e removemos o header
             await api.delete(`/api/transactions/${id}`);
             fetchTransactions();
         } catch (error) {
@@ -65,7 +61,6 @@ const DashboardPage = () => {
         navigate('/login');
     };
 
-    // O restante do seu código (cálculos e JSX) não precisa de nenhuma alteração.
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
@@ -73,9 +68,11 @@ const DashboardPage = () => {
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Dashboard Financeiro</h1>
-                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-            </div>
+    <h1 className="text-3xl font-bold">
+        Dashboard de {user?.name || 'Usuário'}
+    </h1>
+    <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+</div>
             
             {/* Resumo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
