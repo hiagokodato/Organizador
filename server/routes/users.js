@@ -2,20 +2,21 @@
 
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Importe seu modelo de usuário
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 // Função auxiliar para gerar o token JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '1h', // Token expira em 1 hora
+// MODIFICADO para incluir o nome
+const generateToken = (id, name) => { // Aceita 'name' agora
+  return jwt.sign({ id, name }, process.env.JWT_SECRET, { // Inclui 'name' no payload
+    expiresIn: '1h',
   });
 };
 
-// @route   POST /register
+// @route   POST /api/users/register
 // @desc    Registrar novo usuário
 // @access  Public
-router.post('/register', async (req, res) => { // <-- AQUI DEVE SER /register
+router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -35,7 +36,7 @@ router.post('/register', async (req, res) => { // <-- AQUI DEVE SER /register
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.name), // Passa o nome para generateToken
     });
   } catch (error) {
     console.error(error);
@@ -43,10 +44,10 @@ router.post('/register', async (req, res) => { // <-- AQUI DEVE SER /register
   }
 });
 
-// @route   POST /login
+// @route   POST /api/users/login
 // @desc    Autenticar usuário e obter token
 // @access  Public
-router.post('/login', async (req, res) => { // <-- E AQUI DEVE SER /login
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -56,7 +57,7 @@ router.post('/login', async (req, res) => { // <-- E AQUI DEVE SER /login
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.name), // Passa o nome para generateToken
     });
   } else {
     res.status(401).json({ message: 'Email ou senha inválidos.' });
