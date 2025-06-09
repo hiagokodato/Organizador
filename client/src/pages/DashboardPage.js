@@ -1,18 +1,27 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api'; 
+// Importe os novos hooks
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 
 const DashboardPage = () => {
     const [transactions, setTransactions] = useState([]);
     const [formData, setFormData] = useState({ description: '', amount: '', type: 'expense' });
+    const [loading, setLoading] = useState(false); 
     const navigate = useNavigate();
     
-    // Esta parte continua igual
     const token = localStorage.getItem('token');
-    const user = token ? jwt_decode(token) : null;
 
-    const fetchTransactions = async () => {
+    const user = useMemo(() => {
+        return token ? jwt_decode(token) : null;
+    }, [token]);
+
+    const handleLogout = useCallback(() => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    }, [navigate]);
+
+    const fetchTransactions = useCallback(async () => {
         try {
             const res = await api.get('/api/transactions');
             setTransactions(res.data);
@@ -22,28 +31,29 @@ const DashboardPage = () => {
                 handleLogout();
             }
         }
-    };
+    }, [handleLogout]);
 
-    // O useEffect não muda
     useEffect(() => {
         if (token) {
             fetchTransactions();
         } else {
             navigate('/login');
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [token, navigate]); 
+    }, [token, navigate, fetchTransactions]); 
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true); // Ativa o loading
         try {
             await api.post('/api/transactions', formData);
             fetchTransactions();
             setFormData({ description: '', amount: '', type: 'expense' });
         } catch (error) {
             alert('Erro ao adicionar transação');
+        } finally {
+            setLoading(false);
         }
     };
     
@@ -56,23 +66,19 @@ const DashboardPage = () => {
         }
     }
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
-    };
-
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
 
+    // O JSX fica quase igual, apenas com a adição do `disabled` e texto do botão
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center mb-6">
-    <h1 className="text-3xl font-bold">
-        Dashboard de {user?.name || 'Usuário'}
-    </h1>
-    <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-</div>
+                <h1 className="text-3xl font-bold">
+                    Dashboard de {user?.name || 'Usuário'}
+                </h1>
+                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+            </div>
             
             {/* Resumo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -91,7 +97,10 @@ const DashboardPage = () => {
                         <option value="expense">Despesa</option>
                         <option value="income">Receita</option>
                     </select>
-                    <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Adicionar</button>
+                    {/* NOVO: Botão com estado de loading */}
+                    <button type="submit" disabled={loading} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-blue-300">
+                        {loading ? 'Adicionando...' : 'Adicionar'}
+                    </button>
                 </form>
             </div>
 
@@ -99,15 +108,15 @@ const DashboardPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
                  <h2 className="text-2xl font-bold mb-4">Histórico de Transações</h2>
                  <ul>
-                    {transactions.map(t => (
-                        <li key={t._id} className="flex justify-between items-center p-2 border-b">
-                            <span>{t.description}</span>
-                            <span className={t.type === 'income' ? 'text-green-600' : 'text-red-600'}>
-                                {t.type === 'expense' && '-'}R$ {t.amount.toFixed(2)}
-                            </span>
+                     {transactions.map(t => (
+                         <li key={t._id} className="flex justify-between items-center p-2 border-b">
+                             <span>{t.description}</span>
+                             <span className={t.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+                                 {t.type === 'expense' && '-'}R$ {t.amount.toFixed(2)}
+                             </span>
                              <button onClick={() => handleDelete(t._id)} className="text-red-500 hover:text-red-700">X</button>
-                        </li>
-                    ))}
+                         </li>
+                     ))}
                  </ul>
             </div>
         </div>
