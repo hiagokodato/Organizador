@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // MUDANÇA 1: Importamos nosso serviço 'api'
 import { useNavigate } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 
@@ -8,32 +8,41 @@ const DashboardPage = () => {
     const [formData, setFormData] = useState({ description: '', amount: '', type: 'expense' });
     const navigate = useNavigate();
     
+    // Esta parte continua igual
     const token = localStorage.getItem('token');
     const user = token ? jwt_decode(token) : null;
 
     const fetchTransactions = async () => {
         try {
-            const res = await axios.get('/api/transactions', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // MUDANÇA 2: Usamos 'api.get' e removemos o header. Fica mais limpo!
+            const res = await api.get('/api/transactions');
             setTransactions(res.data);
         } catch (error) {
             console.error('Erro ao buscar transações', error);
+            // Adicional: se o token for inválido, deslogar o usuário
+            if (error.response && error.response.status === 401) {
+                handleLogout();
+            }
         }
     };
 
+    // O useEffect não muda
     useEffect(() => {
-        fetchTransactions();
-    }, [token]);
+        if (token) {
+            fetchTransactions();
+        } else {
+            navigate('/login');
+        }
+    // Adicionamos 'navigate' como dependência para boas práticas
+    }, [token, navigate]); 
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/transactions', formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // MUDANÇA 3: Usamos 'api.post' e removemos o header
+            await api.post('/api/transactions', formData);
             fetchTransactions();
             setFormData({ description: '', amount: '', type: 'expense' });
         } catch (error) {
@@ -43,9 +52,8 @@ const DashboardPage = () => {
     
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`/api/transactions/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // MUDANÇA 4: Usamos 'api.delete' e removemos o header
+            await api.delete(`/api/transactions/${id}`);
             fetchTransactions();
         } catch (error) {
             alert('Erro ao deletar transação');
@@ -57,6 +65,7 @@ const DashboardPage = () => {
         navigate('/login');
     };
 
+    // O restante do seu código (cálculos e JSX) não precisa de nenhuma alteração.
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
     const balance = totalIncome - totalExpense;
