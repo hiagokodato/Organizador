@@ -1,5 +1,0 @@
-# /server/.env
-
-MONGO_URI="mongodb+srv://hiagokodato:H728hSi0HEPfbIfM@cluster0.fdshuua.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-JWT_SECRET=H728hSi0HEPfbIfM
-REACT_APP_API_URL=http://localhost:5000
