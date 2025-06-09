@@ -1,10 +1,14 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose'); // Não precisa mais do mongoose aqui
+const connectDB = require('./config/db'); // NOVO: Importa nossa função
 
 // Carrega variáveis de ambiente
 dotenv.config();
+
+// Conecta ao Banco de Dados
+connectDB(); // NOVO: Chama a função para conectar
 
 // Rotas
 const userRoutes = require('./routes/users.js'); 
@@ -16,10 +20,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Conexão com o MongoDB
+/*
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB conectado com sucesso!'))
     .catch(err => console.error('Erro ao conectar no MongoDB:', err));
+*/
 
 // Usar as rotas
 app.use('/api/users', userRoutes);
