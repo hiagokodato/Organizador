@@ -8,20 +8,18 @@ const LoginPage = () => {
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => { 
         e.preventDefault();
-        try 
-            const res = await api.post('/api/users/login', formData);
+        try {
+            await api.post('/api/users/register', formData);
             
-            localStorage.setItem('token', res.data.token);
-            navigate('/');
-            window.location.reload(); // Força a atualização para o App.js verificar o token
+            alert('Usuário cadastrado com sucesso!');
+            navigate('/login'); 
+
         } catch (error) {
-            alert('Falha no login: ' + (error.response?.data?.message || 'Erro no servidor'));
+            alert('Falha no cadastro: ' + (error.response?.data?.message || 'Verifique seus dados'));
         }
     };
-
-    // O seu JSX (a parte visual) não precisa de nenhuma alteração.
     return (
         <div className="flex items-center justify-center h-screen">
             <form onSubmit={handleSubmit} className="p-8 bg-white rounded-lg shadow-md w-96">
