@@ -11,7 +11,7 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('/api/users/login', formData);
+            const res = await api.post('/api/users/login', formData);
             localStorage.setItem('token', res.data.token);
             navigate('/');
             window.location.reload(); // Força a atualização para o App.js verificar o token

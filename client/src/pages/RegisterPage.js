@@ -10,8 +10,7 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            // MUDANÇA PRINCIPAL: Trocamos 'axios.post' por 'api.post'
+        try 
             const res = await api.post('/api/users/login', formData);
             
             localStorage.setItem('token', res.data.token);
