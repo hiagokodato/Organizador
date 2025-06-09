@@ -1,6 +1,5 @@
 # Meu Gestor Financeiro 💸
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 Aplicação web full-stack desenvolvida para auxiliar no controle de finanças pessoais. Permite que os usuários se cadastrem, façam login e gerenciem suas receitas e despesas de forma simples e intuitiva, com dados persistidos em um banco de dados e autenticação segura.
 
@@ -8,7 +7,7 @@ Aplicação web full-stack desenvolvida para auxiliar no controle de finanças p
 
 (Adicione aqui um screenshot da sua aplicação rodando! Isso torna o README muito mais atrativo. Você pode arrastar e soltar a imagem na interface do GitHub quando for editar o README.)
 
-![Demonstração do App](URL_DA_SUA_IMAGEM_OU_GIF_AQUI)
+![Demonstração do App](https://gyazo.com/7d5e6980a128925e9af5041c7ceb26de)
 
 ## ✨ Funcionalidades
 
@@ -105,8 +104,3 @@ Siga os passos abaixo para executar a aplicação localmente:
 | `POST` | `/api/transactions`      | Adiciona uma nova transação.   |    **Sim** |
 | `PUT`  | `/api/transactions/:id`  | Atualiza uma transação existente. (Não implementado no front) |    **Sim** |
 | `DELETE`| `/api/transactions/:id`| Deleta uma transação.          |    **Sim** |
-
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
