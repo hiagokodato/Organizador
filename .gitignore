@@ -1,8 +1,6 @@
 # .gitignore
 
-# Ignorar dependências (você já deve ter isso)
 /client/node_modules
 /server/node_modules
 
-# Ignorar o arquivo de ambiente do servidor (A LINHA MAIS IMPORTANTE)
 /server/.env
