@@ -1,3 +1,5 @@
+// /server/controllers/userController.js
+
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -6,6 +8,7 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+// --- FUNÇÃO DE REGISTRO ---
 exports.registerUser = async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -26,10 +29,13 @@ exports.registerUser = async (req, res) => {
             token: generateToken(user._id),
         });
     } catch (error) {
+        // CORREÇÃO APLICADA AQUI
+        console.error('ERRO NO REGISTRO:', error); 
         res.status(500).json({ message: 'Erro no servidor' });
     }
 };
 
+// --- FUNÇÃO DE LOGIN ---
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -45,6 +51,8 @@ exports.loginUser = async (req, res) => {
             res.status(401).json({ message: 'Email ou senha inválidos' });
         }
     } catch (error) {
+        // CORREÇÃO APLICADA AQUI
+        console.error('ERRO NO LOGIN:', error);
         res.status(500).json({ message: 'Erro no servidor' });
     }
 };

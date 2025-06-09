@@ -1,35 +1,29 @@
+// /server/server.js
+
+// 1. IMPORTAÇÕES (cada uma apenas uma vez)
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-// const mongoose = require('mongoose'); // Não precisa mais do mongoose aqui
-const connectDB = require('./config/db'); // NOVO: Importa nossa função
+const connectDB = require('./config/db'); // Importa a função de conexão
 
-// Carrega variáveis de ambiente
-dotenv.config();
-
-// Conecta ao Banco de Dados
-connectDB(); // NOVO: Chama a função para conectar
-
-// Rotas
+// Importa suas rotas
 const userRoutes = require('./routes/users.js'); 
 const transactionRoutes = require('./routes/transactions.js');
 
-const app = express();
+// 2. CONFIGURAÇÕES INICIAIS
+dotenv.config(); // Carrega as variáveis do .env
+connectDB(); // Executa a conexão com o banco de dados
 
-// Middlewares
+const app = express(); // Cria a aplicação Express (apenas uma vez)
+
+// 3. MIDDLEWARES
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Middleware para o backend entender JSON
 
-/*
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB conectado com sucesso!'))
-    .catch(err => console.error('Erro ao conectar no MongoDB:', err));
-*/
-
-// Usar as rotas
+// 4. USO DAS ROTAS
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 
+// 5. INICIALIZAÇÃO DO SERVIDOR
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
