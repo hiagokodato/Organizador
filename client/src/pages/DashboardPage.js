@@ -3,13 +3,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom'; // Para navegação programática
 import { jwtDecode } from 'jwt-decode'; // Importação CORRETA para a versão 4.x.x+
 import api from '../services/api'; // Sua instância configurada do Axios
+import { toast } from 'react-hot-toast'; // Importa o toast
 
 const DashboardPage = () => {
     // Estados para gerenciar os dados e o UI
     const [transactions, setTransactions] = useState([]); // Lista de transações
     const [formData, setFormData] = useState({ description: '', amount: '', type: 'expense' }); // Dados do formulário
     const [loading, setLoading] = useState(false); // Estado de carregamento para o envio do formulário
-    const [fetchLoading, setFetchLoading] = useState(true); // NOVO: Estado de carregamento para a busca inicial de transações
+    const [fetchLoading, setFetchLoading] = useState(true); // Estado de carregamento para a busca inicial de transações
     const navigate = useNavigate(); // Hook para navegação
 
     // Obtém o token do localStorage
@@ -24,6 +25,7 @@ const DashboardPage = () => {
     // Função de logout, memoizada para performance
     const handleLogout = useCallback(() => {
         localStorage.removeItem('token'); // Remove o token do localStorage
+        toast.success('Você foi desconectado.'); // Notificação de logout
         navigate('/login'); // Redireciona para a página de login
     }, [navigate]);
 
@@ -38,9 +40,11 @@ const DashboardPage = () => {
             // Se o erro for 401 (Não Autorizado), redireciona para o login (token inválido/expirado)
             // Note: O interceptor do api.js também lida com isso globalmente, mas é bom ter aqui para contexto.
             if (error.response && error.response.status === 401) {
+                toast.error('Sessão expirada ou inválida. Faça login novamente.'); // Notificação de sessão expirada
                 handleLogout(); // Chama a função de logout
+            } else {
+                toast.error('Erro ao carregar transações.'); // Notificação de erro geral
             }
-            // Opcional: exibir uma mensagem de erro mais amigável para o usuário sobre a falha na busca
         } finally {
             setFetchLoading(false); // Desativa o estado de carregamento da busca
         }
@@ -60,7 +64,7 @@ const DashboardPage = () => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            // NOVO: Converte o 'amount' para número flutuante, ou string vazia se inválido
+            // Converte o 'amount' para número flutuante, ou string vazia se inválido
             [name]: name === 'amount' ? parseFloat(value) || '' : value
         });
     };
@@ -69,35 +73,39 @@ const DashboardPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault(); // Previne o recarregamento da página
 
-        // NOVO: Validação básica do formulário antes de enviar
+        // Validação básica do formulário antes de enviar
         if (!formData.description.trim() || !formData.amount || parseFloat(formData.amount) <= 0) {
-            alert('Por favor, preencha a descrição e um valor positivo para a transação.');
+            toast.error('Por favor, preencha a descrição e um valor positivo para a transação.'); // Notificação de validação
             return; // Impede o envio se a validação falhar
         }
 
-        setLoading(true); // Ativa o estado de carregamento do botão
+        setLoading(true);
+        const addToastId = toast.loading('Adicionando transação...'); // Toast de carregamento
         try {
             await api.post('/api/transactions', formData); // Envia os dados da nova transação
             setFormData({ description: '', amount: '', type: 'expense' }); // Limpa o formulário
             fetchTransactions(); // Recarrega a lista de transações para exibir a nova
+            toast.success('Transação adicionada com sucesso!', { id: addToastId }); // Toast de sucesso
         } catch (error) {
             console.error('Erro ao adicionar transação', error);
-            // NOVO: Exibe mensagem de erro mais específica do backend, se disponível
-            alert(error.response?.data?.message || 'Erro ao adicionar transação.');
+            const errorMessage = error.response?.data?.message || 'Erro ao adicionar transação.';
+            toast.error(errorMessage, { id: addToastId }); // Toast de erro
         } finally {
-            setLoading(false); // Desativa o estado de carregamento
+            setLoading(false);
         }
     };
 
     // Lida com a exclusão de uma transação
     const handleDelete = async (id) => {
+        const deleteToastId = toast.loading('Deletando transação...'); // Toast de carregamento
         try {
             await api.delete(`/api/transactions/${id}`); // Envia a requisição DELETE
             fetchTransactions(); // Recarrega a lista de transações após a exclusão
+            toast.success('Transação deletada com sucesso!', { id: deleteToastId }); // Toast de sucesso
         } catch (error) {
             console.error('Erro ao deletar transação', error);
-            // NOVO: Exibe mensagem de erro mais específica do backend, se disponível
-            alert(error.response?.data?.message || 'Erro ao deletar transação.');
+            const errorMessage = error.response?.data?.message || 'Erro ao deletar transação.';
+            toast.error(errorMessage, { id: deleteToastId }); // Toast de erro
         }
     };
 
@@ -168,7 +176,6 @@ const DashboardPage = () => {
                         <option value="expense">Despesa</option>
                         <option value="income">Receita</option>
                     </select>
-                    {/* Botão de envio com estado de carregamento */}
                     <button
                         type="submit"
                         disabled={loading}
@@ -183,9 +190,9 @@ const DashboardPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold mb-4">Histórico de Transações</h2>
                 {fetchLoading ? (
-                    <p>Carregando transações...</p> // Exibe mensagem de carregamento
+                    <p>Carregando transações...</p>
                 ) : transactions.length === 0 ? (
-                    <p>Nenhuma transação encontrada. Adicione uma nova!</p> // Mensagem se não houver transações
+                    <p>Nenhuma transação encontrada. Adicione uma nova!</p>
                 ) : (
                     <ul>
                         {transactions.map(t => (

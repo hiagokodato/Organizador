@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../services/api'; // Importa sua instância configurada do Axios
+import api from '../services/api';
+import { toast } from 'react-hot-toast'; // Importa o toast
 
 function RegisterPage() {
   const [name, setName] = useState('');
@@ -12,43 +13,47 @@ function RegisterPage() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    console.log('1. handleSubmit foi chamado!'); // Console.log de depuração
-    e.preventDefault(); // Previne o recarregamento padrão da página
-    setLoading(true); // Ativa o estado de carregamento
-    setError(''); // Limpa mensagens de erro anteriores
+    console.log('1. handleSubmit foi chamado!');
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    // Validação frontend: verifica se as senhas coincidem
+    let toastId; // Variável para armazenar o ID do toast de carregamento
+
     if (password !== confirmPassword) {
-      console.log('Validação: As senhas não coincidem!'); // Console.log de depuração
-      setError('As senhas não coincidem!');
-      setLoading(false); // Desativa o carregamento
-      return; // Interrompe a função se as senhas não batem
+      console.log('Validação: As senhas não coincidem!');
+      const validationError = 'As senhas não coincidem!';
+      setError(validationError);
+      toast.error(validationError); // Exibe o erro de validação
+      setLoading(false);
+      return;
     }
 
     try {
-      console.log('2. Tentando enviar requisição POST...'); // Console.log de depuração
-      console.log('Dados a serem enviados:', { name, email, password }); // Console.log de depuração
+      toastId = toast.loading('Registrando...'); // Mostra toast de carregamento
+      console.log('2. Tentando enviar requisição POST...');
+      console.log('Dados a serem enviados:', { name, email, password });
 
-      // CORREÇÃO DA URL: Usando '/api/users/register' para alinhar com o backend
-      const response = await api.post('/api/users/register', {
+      const response = await api.post('/api/users/register', { // CORREÇÃO DA URL
         name,
         email,
         password,
       });
 
-      console.log('3. Requisição POST bem-sucedida!'); // Console.log de depuração
-      console.log('Resposta do Backend:', response.data); // Console.log de depuração
+      console.log('3. Requisição POST bem-sucedida!');
+      console.log('Resposta do Backend:', response.data);
 
-      alert('Usuário registrado com sucesso! Faça login.'); // Alerta de sucesso
-      navigate('/login'); // Redireciona para a página de login
+      toast.success('Usuário registrado com sucesso! Faça login.', { id: toastId }); // Atualiza para toast de sucesso
+      navigate('/login');
 
     } catch (err) {
-      console.error('4. Requisição POST falhou no catch:', err); // Console.log de depuração do erro
-      // Exibe a mensagem de erro do backend, se disponível, ou uma genérica
-      setError(err.response?.data?.message || 'Erro ao registrar. Tente novamente.');
+      console.error('4. Requisição POST falhou no catch:', err);
+      const errorMessage = err.response?.data?.message || 'Erro ao registrar. Tente novamente.';
+      setError(errorMessage);
+      toast.error(errorMessage, { id: toastId }); // Atualiza para toast de erro
     } finally {
-      console.log('5. Bloco finally executado.'); // Console.log de depuração
-      setLoading(false); // Desativa o estado de carregamento
+      console.log('5. Bloco finally executado.');
+      setLoading(false);
     }
   };
 
@@ -112,10 +117,10 @@ function RegisterPage() {
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              disabled={loading} // O botão é desabilitado durante o carregamento
+              disabled={loading}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full disabled:opacity-50"
             >
-              {loading ? 'Registrando...' : 'Registrar'} {/* Texto do botão muda durante o carregamento */}
+              {loading ? 'Registrando...' : 'Registrar'}
             </button>
           </div>
           {error && <p className="text-red-500 text-xs italic mt-4 text-center">{error}</p>}

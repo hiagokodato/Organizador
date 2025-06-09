@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api'; // Importa sua instância configurada do Axios
+import { toast } from 'react-hot-toast'; // Importa o toast para notificações
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,14 +11,15 @@ function LoginPage() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    console.log('1. handleSubmit do Login foi chamado!'); // Console.log de depuração
     e.preventDefault(); // Previne o recarregamento padrão da página
-    setLoading(true); // Ativa o estado de carregamento
+    setLoading(true); // Ativa o estado de carregamento do botão
     setError(''); // Limpa mensagens de erro anteriores
 
+    let toastId; // Variável para armazenar o ID do toast de carregamento
+
     try {
-      console.log('2. Tentando enviar requisição POST para login...'); // Console.log de depuração
-      console.log('Dados a serem enviados:', { email, password }); // Console.log de depuração
+      toastId = toast.loading('Entrando...'); // Mostra um toast de carregamento
+      console.log('Dados a serem enviados:', { email, password }); // Log de depuração
 
       // CORREÇÃO DA URL: Usando '/api/users/login' para alinhar com o backend
       const response = await api.post('/api/users/login', {
@@ -25,20 +27,19 @@ function LoginPage() {
         password,
       });
 
-      console.log('3. Requisição POST de login bem-sucedida!'); // Console.log de depuração
-      console.log('Resposta do Backend (Login):', response.data); // Console.log de depuração
-
       const { token } = response.data;
       localStorage.setItem('token', token); // Armazena o token recebido
 
+      toast.success('Login realizado com sucesso!', { id: toastId }); // Atualiza o toast para sucesso
       navigate('/'); // Redireciona para a página principal (Dashboard)
 
     } catch (err) {
-      console.error('4. Requisição POST de login falhou no catch:', err); // Console.log de depuração do erro
-      // Exibe a mensagem de erro do backend, se disponível, ou uma genérica
-      setError(err.response?.data?.message || 'Erro ao fazer login. Tente novamente.');
+      console.error('Erro de login:', err.response ? err.response.data : err.message); // Log de depuração
+      // Tenta pegar a mensagem de erro do backend; caso contrário, usa uma genérica
+      const errorMessage = err.response?.data?.message || 'Erro ao fazer login. Tente novamente.';
+      setError(errorMessage); // Define o erro para exibição no formulário
+      toast.error(errorMessage, { id: toastId }); // Atualiza o toast para erro
     } finally {
-      console.log('5. Bloco finally do Login executado.'); // Console.log de depuração
       setLoading(false); // Desativa o estado de carregamento
     }
   };
@@ -77,10 +78,10 @@ function LoginPage() {
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading} // O botão é desabilitado durante o carregamento
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full disabled:opacity-50"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Entrando...' : 'Entrar'} {/* Texto do botão muda durante o carregamento */}
             </button>
           </div>
           {error && <p className="text-red-500 text-xs italic mt-4 text-center">{error}</p>}
